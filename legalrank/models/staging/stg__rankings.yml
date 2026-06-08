@@ -1,0 +1,212 @@
+version: 2
+
+models:
+  - name: stg__rankings
+    description: |
+      Cleaned and deduplicated staging model for rankings data.
+      Handles dual-schema ingestion (pre/post CMS migration) by
+      unifying ranking_tier from two source columns. Rows with invalid
+      firm_ref (NULL or empty) are excluded. post_status is standardised
+      to lowercase. Deduplication keeps the latest modified_ts per ranking_id.
+
+    columns:
+      - name: ranking_id
+        description: Unique identifier for the ranking record. Deduplicated by latest modified_ts.
+        data_type: varchar
+        tests:
+          - unique:
+              severity: error
+              config:
+                error_if: ">0"
+                tags: ["p1", "data_integrity"]
+              meta:
+                rationale: >
+                  Duplicate ranking_ids would cause inflated firm counts in
+                  downstream marts and the "Top Tier Firms" widget. This
+                  must always be unique as the grain of the model.
+          - not_null:
+              severity: error
+              config:
+                tags: ["p1", "data_integrity"]
+              meta:
+                rationale: >
+                  A NULL ranking_id makes the row untraceable. The downstream
+                  mart cannot display rankings without this identifier.
+
+      - name: edition_year
+        description: Publication edition year for the ranking.
+        data_type: integer
+        tests:
+          - not_null:
+              severity: error
+              config:
+                tags: ["p1", "data_integrity"]
+              meta:
+                rationale: >
+                  edition_year is used for partitioning and filtering in
+                  client products. Missing year means the ranking cannot
+                  be assigned to an edition.
+
+      - name: edition_id
+        description: Identifier for the publication edition (e.g. ED2024UK).
+        data_type: varchar
+
+      - name: firm_ref
+        description: Foreign key to the raw_firms seed. Must resolve to a valid firm.
+        data_type: varchar
+        tests:
+          - not_null:
+              severity: error
+              config:
+                tags: ["p1", "data_integrity"]
+              meta:
+                rationale: >
+                  Rankings must be linked to a firm. Without a valid firm_ref,
+                  the ranking cannot be displayed in firm-specific widgets.
+          - relationships:
+              to: ref('raw_firms')
+              field: firm_ref
+              severity: warn
+              config:
+                tags: ["p2", "data_quality"]
+              meta:
+                rationale: >
+                  Orphaned rankings that reference non-existent firms are
+                  excluded from the mart. This test warns if the count
+                  exceeds expectations, as it may indicate a data loading issue.
+
+      - name: practice_area_id
+        description: Foreign key to the raw_practice_areas seed.
+        data_type: varchar
+        tests:
+          - not_null:
+              severity: warn
+              config:
+                tags: ["p2", "data_quality"]
+              meta:
+                rationale: >
+                  A missing practice_area_id means we cannot classify the
+                  ranking by practice area. The row is still useful for
+                  firm-level aggregation, hence warn rather than error.
+          - relationships:
+              to: ref('raw_practice_areas')
+              field: practice_area_id
+              severity: warn
+              config:
+                tags: ["p2", "data_quality"]
+              meta:
+                rationale: >
+                  Rows referencing unknown practice areas would show as
+                  unclassified in the widget. Monitor this as an indicator
+                  of data freshness on the reference table.
+
+      - name: ranking_tier
+        description: >
+          Unified ranking tier (0-5). Derived from `ranking_tier` (integer,
+          pre-migration) or `tier_rank` (varchar, post-migration, including
+          legacy 'TIER_N' values). NULL when no tier was assigned.
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 5
+              strictly: false
+              config:
+                severity: error
+                tags: ["p1", "data_quality"]
+              meta:
+                rationale: >
+                  ranking_tier must be 0-5 inclusive. Any value outside
+                  this range would break the "Top Tier Firms" widget
+                  tiering logic and cause display errors.
+          - elementary.column_anomalies:
+              column_name: ranking_tier
+              timestamp_column: modified_ts
+              where_expression: "ranking_tier IS NOT NULL"
+              config:
+                severity: warn
+                tags: ["p2", "anomaly_detection"]
+              meta:
+                rationale: >
+                  Sudden shifts in tier distribution (e.g. all tiers becoming
+                  0 or 5) indicate a data loading or transformation bug.
+                  The "Top Tier Firms" widget relies on stable tier distribution.
+
+      - name: ranking_type
+        description: Type of ranking awarded to the firm (e.g. 'firm recommended', 'firm to watch').
+        data_type: varchar
+        tests:
+          - accepted_values:
+              values: ['firm recommended', 'firm to watch']
+              severity: warn
+              config:
+                tags: ["p2", "data_quality"]
+              meta:
+                rationale: >
+                  Unexpected ranking_type values indicate schema drift
+                  on the source system. These would not break the mart
+                  but would fail to render correctly on client dashboards.
+
+      - name: post_status
+        description: Editorial workflow status, standardised to lowercase.
+        data_type: varchar
+        tests:
+          - accepted_values:
+              values: ['publish', 'draft', 'pending', 'trash']
+              severity: warn
+              config:
+                tags: ["p2", "data_quality"]
+              meta:
+                rationale: >
+                  Unknown post_status values would cause downstream
+                  ranking_decision_status logic (Task 3) to behave
+                  unexpectedly, potentially hiding valid rankings.
+          - not_null:
+              severity: error
+              config:
+                tags: ["p1", "data_integrity"]
+              meta:
+                rationale: >
+                  post_status determines if a ranking is visible to
+                  client products. NULL values make the ranking
+                  undisplayable.
+
+      - name: publication_status
+        description: Publication lifecycle status of the ranking (e.g. Researching, Active, Archive).
+        data_type: varchar
+
+      - name: listing_type
+        description: Listing category (e.g. premium, standard, sponsored, vip).
+        data_type: varchar
+
+      - name: commentary
+        description: Optional editorial commentary text for the ranking.
+        data_type: varchar
+
+      - name: modified_ts
+        description: Timestamp of the last modification to the ranking record. Used for deduplication.
+        data_type: timestamp
+        tests:
+          - not_null:
+              severity: error
+              config:
+                tags: ["p1", "data_integrity"]
+              meta:
+                rationale: >
+                  modified_ts is the deduplication cursor. A NULL value
+                  means we cannot determine which row is the latest,
+                  risking stale data in the "Top Tier Firms" widget.
+
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 900
+          max_value: 1100
+          config:
+            severity: warn
+            tags: ["p2", "volume_monitoring"]
+          meta:
+            rationale: >
+              Total row count for raw_rankings is approximately 1040 rows.
+              A significant deviation (outside 900-1100) suggests either
+              data loss or duplicate loading, both of which would impact
+              the "Top Tier Firms" widget counts.

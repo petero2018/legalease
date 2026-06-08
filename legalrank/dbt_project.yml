@@ -18,7 +18,7 @@ models:
   legalrank:
     staging:
       +materialized: view
-    intermedaite:
+    intermediate:
       +materialized: view
     marts:
       +materialized: table
