@@ -17,8 +17,8 @@ seeds:
 models:
   legalrank:
     staging:
-      +materialized: view
+      +materialized: table
     intermediate:
       +materialized: table
-    marts:
+    mart:
       +materialized: table
