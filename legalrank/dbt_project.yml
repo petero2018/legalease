@@ -1,0 +1,24 @@
+name: legalrank
+
+profile: legalrank
+
+seed-paths: ["seeds"]
+model-paths: ["models"]
+macro-paths: ["macros"]
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+seeds:
+  legalrank:
+    +schema: raw
+    +quote_columns: false
+
+models:
+  legalrank:
+    staging:
+      +materialized: view
+    intermedaite:
+      +materialized: view
+    marts:
+      +materialized: table

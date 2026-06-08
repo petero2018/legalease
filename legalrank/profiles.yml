@@ -1,0 +1,27 @@
+legalrank:
+  target: prod
+  outputs:
+    prod:
+      type: snowflake
+      threads: 4
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+      warehouse: COMPUTE_WH # in real system this could receive a dedicated warehouse. Now the single process handled by this one WH
+      schema: RAW
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: SYSADMIN # of course this would be different in real system with a proper RBAC setup
+elementary:
+  target: prod
+  outputs:
+    prod:
+      type: snowflake
+      host: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}" # it could be a key pair in real system and a service user in snowflake
+      role: SYSADMIN # of course this would be different in real system with a proper RBAC setup
+      database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+      schema: ELEMENTARY
+      threads: 4
+
+# in a real system project.yml can be stored in a vault and built via CI/CD

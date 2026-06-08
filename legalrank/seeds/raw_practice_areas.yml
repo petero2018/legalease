@@ -1,0 +1,47 @@
+version: 2
+
+seeds:
+  - name: raw_practice_areas
+    description: Raw practice area reference data loaded from CSV.
+    config:
+      column_types:
+        practice_area_id: varchar
+        practice_group: varchar
+        practice_area: varchar
+        sub_practice_area: varchar
+        country: varchar
+        is_active: boolean
+
+    columns:
+      - name: practice_area_id
+        description: Unique identifier for the practice area.
+        tests:
+          - not_null:
+              config:
+                severity: warn
+          - unique:
+              config:
+                severity: warn
+
+      - name: practice_group
+        description: High-level practice group for the practice area.
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: practice_area
+        description: Main practice area name.
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: sub_practice_area
+        description: More specific sub-practice area classification.
+
+      - name: country
+        description: Country associated with the practice area.
+
+      - name: is_active
+        description: Whether the practice area is currently active.

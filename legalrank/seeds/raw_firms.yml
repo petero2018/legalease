@@ -1,0 +1,51 @@
+version: 2
+
+seeds:
+  - name: raw_firms
+    description: Raw firm reference data loaded from CSV.
+    config:
+      column_types:
+        firm_ref: varchar
+        firm_name: varchar
+        country: varchar
+        city: varchar
+        established_year: integer
+        is_active: boolean
+        created_at: timestamp
+        updated_at: timestamp
+
+    columns:
+      - name: firm_ref
+        description: Unique firm identifier.
+        tests:
+          - not_null:
+              config:
+                severity: warn
+          - unique:
+              config:
+                severity: warn
+
+      - name: firm_name
+        description: Name of the law firm.
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: country
+        description: Country where the firm is based.
+
+      - name: city
+        description: City where the firm is based.
+
+      - name: established_year
+        description: Year the firm was established.
+
+      - name: is_active
+        description: Whether the firm is currently active.
+
+      - name: created_at
+        description: Timestamp when the firm record was created.
+
+      - name: updated_at
+        description: Timestamp when the firm record was last updated.

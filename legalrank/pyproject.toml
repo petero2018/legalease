@@ -1,0 +1,18 @@
+[project]
+name = "legalrank"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Peter Osztodi",email = "27630335+petero2018@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "dbt-snowflake (>=1.11.5,<2.0.0)",
+    "elementary-data[snowflake] (>=0.24.1,<0.25.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
