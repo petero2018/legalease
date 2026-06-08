@@ -1,17 +1,3 @@
-/*
-  stg__rankings
-  ------------
-  Grain: one row per ranking_id (deduplicated by latest modified_ts)
-
-  Handles dual-schema ingestion:
-    - Pre-migration rows:   ranking_tier IS NOT NULL (integer)
-    - Post-migration rows:  tier_rank IS NOT NULL (varchar, including legacy 'TIER_N' values)
-
-  Invalid firm_ref: NULL, empty string, or whitespace-only values.
-  These rows are filtered out as they cannot be linked to a known firm and
-  would cause silent failures in downstream joins/dashboards.
-*/
-
 WITH source AS (
     SELECT 
         ranking_id,
@@ -45,23 +31,7 @@ deduped AS (
                                 PARTITION BY ranking_id
                                 ORDER BY modified_ts DESC
                                 ) = 1
-),
-
-casted AS (
-    SELECT
-        ranking_id,
-        edition_year,
-        edition_id,
-        firm_ref,
-        practice_area_id,
-        ranking_tier,
-        ranking_type,
-        post_status,
-        publication_status,
-        listing_type,
-        commentary,
-        modified_ts
-    FROM deduped
 )
 
-SELECT * FROM casted
+SELECT * 
+FROM deduped
