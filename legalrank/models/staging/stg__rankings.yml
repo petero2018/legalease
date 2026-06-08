@@ -203,16 +203,19 @@ models:
                     risking stale data in the "Top Tier Firms" widget.
 
     tests:
-      - dbt_expectations.expect_table_row_count_to_be_between:
-          arguments:
-            min_value: 900
-            max_value: 1100
-            config:
-              severity: warn
-              tags: ["p2", "volume_monitoring"]
-              meta:
-                rationale: >
-                  Total row count for raw_rankings is approximately 1040 rows.
-                  A significant deviation (outside 900-1100) suggests either
-                  data loss or duplicate loading, both of which would impact
-                  the "Top Tier Firms" widget counts.
+      - elementary.volume_anomalies:
+          timestamp_column: modified_ts
+          where_expression: "1=1"
+          sensitivity: normal
+          days_back: 7
+          config:
+            severity: warn
+            tags: ["p2", "volume_monitoring"]
+            meta:
+              rationale: >
+                The "Top Tier Firms" widget directly consumes stg__rankings
+                counts via downstream models. A sudden drop or spike in row
+                volume (e.g. a missing region or duplicate load) would cause
+                the widget to show incorrect firm counts, eroding client trust.
+                Elementary learns the expected volume range from history and
+                alerts on anomalous deviations.
