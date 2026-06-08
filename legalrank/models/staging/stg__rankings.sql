@@ -32,7 +32,7 @@ WITH source AS (
         UPPER(TRIM(publication_status)) AS publication_status,
         UPPER(TRIM(listing_type)) AS listing_type,
         commentary,
-        TRY_CAST(modified_ts AS TIMESTAMP) AS modified_ts
+        modified_ts AS modified_ts
     FROM {{ ref('raw_rankings') }}
 ),
 
@@ -41,7 +41,6 @@ deduped AS (
         *
     FROM source
     WHERE firm_ref IS NOT NULL
-    AND
     QUALIFY ROW_NUMBER() OVER (
                                 PARTITION BY ranking_id
                                 ORDER BY modified_ts DESC
@@ -63,7 +62,6 @@ casted AS (
         commentary,
         modified_ts
     FROM deduped
-    WHERE rn = 1
 )
 
 SELECT * FROM casted
