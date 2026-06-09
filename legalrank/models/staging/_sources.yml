@@ -19,6 +19,60 @@ sources:
             error_after:
               count: 12
               period: hour
+        columns:
+          - name: ranking_id
+            description: Identifier for the ranking record.
+            data_type: varchar
+          - name: edition_year
+            description: Publication edition year for the ranking.
+            data_type: integer
+          - name: edition_id
+            description: Identifier for the publication edition.
+            data_type: varchar
+          - name: firm_ref
+            description: Firm identifier linked to the raw firms seed.
+            data_type: varchar
+          - name: practice_area_id
+            description: Practice area identifier linked to the raw practice areas seed.
+            data_type: varchar
+          - name: ranking_tier
+            description: Numeric ranking tier from the pre-migration CMS export.
+            data_type: integer
+          - name: tier_rank
+            description: String ranking tier from the post-migration CMS export.
+            data_type: varchar
+          - name: ranking_type
+            description: Type of ranking awarded to the firm.
+            data_type: varchar
+          - name: post_status
+            description: Editorial or publishing workflow status for the ranking.
+            data_type: varchar
+          - name: publication_status
+            description: Publication lifecycle status of the ranking.
+            data_type: varchar
+          - name: listing_type
+            description: Listing category associated with the ranking.
+            data_type: varchar
+          - name: commentary
+            description: Optional commentary text associated with the ranking.
+            data_type: varchar
+          - name: modified_ts
+            description: Timestamp when the ranking record was last modified.
+            data_type: timestamp_ntz
+        tests:
+          - elementary.schema_changes_from_baseline:
+              arguments:
+                fail_on_added: true
+                enforce_types: true
+              config:
+                severity: error
+                tags: ["p1", "schema_drift"]
+                meta:
+                  rationale: >
+                    raw_rankings is the CMS export contract used by stg__rankings.
+                    Added, removed, renamed, or type-changed source columns can
+                    break tier derivation or silently reduce the "Top Tier Firms"
+                    widget counts, so schema drift must stop the pipeline.
 
       - name: raw_submissions
         description: Raw submissions data

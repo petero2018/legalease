@@ -185,3 +185,21 @@ models:
                   A drop below 800 suggests catastrophic data loss
                   (e.g. missing edition or country), which would make
                   the "Top Tier Firms" widget show incomplete counts.
+
+      - elementary.volume_anomalies:
+          arguments:
+            where_expression: "is_ranked = true and is_top_tier = true"
+            anomaly_sensitivity: 2
+            anomaly_direction: drop
+            min_training_set_size: 7
+            fail_on_zero: true
+            ignore_small_changes:
+              drop_failure_percent_threshold: 10
+          config:
+            severity: error
+            tags: ["p1", "volume_monitoring"]
+            meta:
+              rationale: >
+                The Top Tier Firms widget consumes ranked tiered firm rows. A drop
+                greater than 10% would reproduce the client-visible count regression
+                described in the incident, so this is a P1 pipeline blocker.
