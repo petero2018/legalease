@@ -13,12 +13,12 @@ WITH source AS (
             ranking_tier,
             TRY_CAST(REGEXP_REPLACE(tier_rank, 'TIER_', '') AS INTEGER)
         ) AS ranking_tier,
-        UPPER(TRIM(ranking_type)) AS ranking_type,
-        UPPER(TRIM(post_status)) AS post_status,
-        UPPER(TRIM(publication_status)) AS publication_status,
-        UPPER(TRIM(listing_type)) AS listing_type,
+        REPLACE(REPLACE(LOWER(TRIM(ranking_type)), 'firm reccommended', 'firm_recommended'),'_', ' ') AS ranking_type,
+        LOWER(TRIM(post_status)) AS post_status,
+        LOWER(TRIM(publication_status)) AS publication_status,
+        LOWER(TRIM(listing_type)) AS listing_type,
         commentary,
-        modified_ts AS modified_ts
+        modified_ts
     FROM {{ ref('raw_rankings') }}
 ),
 

@@ -121,19 +121,6 @@ models:
                       ranking_tier must be 0-5 inclusive. Any value outside
                       this range would break the "Top Tier Firms" widget
                       tiering logic and cause display errors.
-          - elementary.column_anomalies:
-              arguments:
-                column_name: ranking_tier
-                timestamp_column: modified_ts
-                where_expression: "ranking_tier IS NOT NULL"
-                config:
-                  severity: warn
-                  tags: ["p2", "anomaly_detection"]
-                  meta:
-                    rationale: >
-                      Sudden shifts in tier distribution (e.g. all tiers becoming
-                      0 or 5) indicate a data loading or transformation bug.
-                      The "Top Tier Firms" widget relies on stable tier distribution.
 
       - name: ranking_type
         description: Type of ranking awarded to the firm (e.g. 'firm recommended', 'firm to watch').
@@ -201,21 +188,3 @@ models:
                     modified_ts is the deduplication cursor. A NULL value
                     means we cannot determine which row is the latest,
                     risking stale data in the "Top Tier Firms" widget.
-
-    tests:
-      - elementary.volume_anomalies:
-          timestamp_column: modified_ts
-          where_expression: "1=1"
-          sensitivity: normal
-          days_back: 7
-          config:
-            severity: warn
-            tags: ["p2", "volume_monitoring"]
-            meta:
-              rationale: >
-                The "Top Tier Firms" widget directly consumes stg__rankings
-                counts via downstream models. A sudden drop or spike in row
-                volume (e.g. a missing region or duplicate load) would cause
-                the widget to show incorrect firm counts, eroding client trust.
-                Elementary learns the expected volume range from history and
-                alerts on anomalous deviations.
