@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg__practice_areas
+    description: Staged practice area reference data. One row per practice_area_id.
+    columns:
+      - name: practice_area_id
+        description: Unique practice area identifier.
+        tests:
+          - unique
+          - not_null
+      - name: practice_group
+        description: Practice group classification (e.g. Corporate).
+        tests:
+          - not_null
+      - name: practice_area
+        description: Practice area name (e.g. Capital Markets).
+        tests:
+          - not_null
+      - name: sub_practice_area
+        description: Sub-practice area (nullable).
+      - name: country
+        description: Country associated with the practice area.
+      - name: is_active
+        description: Whether the practice area is currently active.
