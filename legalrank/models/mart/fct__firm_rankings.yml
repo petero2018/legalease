@@ -1,0 +1,130 @@
+version: 2
+
+models:
+  - name: fct__firm_rankings
+    description: |
+      Fact table for the "Top Tier Firms" client product widget.
+      Sources from int__rankings with derived flags for filtering and grouping.
+      Grain: one row per ranking_id (1:1 with int__rankings).
+
+    columns:
+      - name: ranking_id
+        description: Unique identifier for the ranking record. Grain of the table.
+        data_type: varchar
+        tests:
+          - unique:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    Duplicate ranking_ids would cause double-counting
+                    in the "Top Tier Firms" widget.
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    Without ranking_id the row cannot be linked back
+                    to the source ranking.
+
+      - name: edition_year
+        description: Publication edition year.
+        data_type: integer
+
+      - name: edition_id
+        description: Publication edition identifier.
+        data_type: varchar
+
+      - name: firm_country
+        description: Country of the ranked firm.
+        data_type: varchar
+
+      - name: firm_city
+        description: City of the ranked firm.
+        data_type: varchar
+
+      - name: firm_ref
+        description: Firm identifier.
+        data_type: varchar
+
+      - name: firm_name
+        description: Display name of the ranked firm.
+        data_type: varchar
+
+      - name: practice_area_id
+        description: Practice area identifier.
+        data_type: varchar
+
+      - name: practice_group
+        description: Practice group classification.
+        data_type: varchar
+
+      - name: practice_area_name
+        description: Practice area name.
+        data_type: varchar
+
+      - name: sub_practice_area
+        description: Sub-practice area name.
+        data_type: varchar
+
+      - name: ranking_tier
+        description: Unified ranking tier (0-5).
+        data_type: integer
+
+      - name: ranking_type
+        description: Type of ranking.
+        data_type: varchar
+
+      - name: ranking_decision_status
+        description: Derived status (ranked / not ranked).
+        data_type: varchar
+
+      - name: post_status
+        description: Editorial workflow status.
+        data_type: varchar
+
+      - name: publication_status
+        description: Publication lifecycle status.
+        data_type: varchar
+
+      - name: listing_type
+        description: Listing category.
+        data_type: varchar
+
+      - name: is_top_tier
+        description: TRUE if ranking_tier BETWEEN 1 AND 5.
+        data_type: boolean
+
+      - name: is_ranked
+        description: TRUE if ranking_decision_status = 'ranked'.
+        data_type: boolean
+
+      - name: is_premium_listing
+        description: TRUE if listing_type IN ('premium', 'vip').
+        data_type: boolean
+
+      - name: tier_group
+        description: Categorised tier group (top, mid, lower, unknown).
+        data_type: varchar
+
+      - name: modified_ts
+        description: Timestamp of the last modification.
+        data_type: timestamp
+
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          arguments:
+            min_value: 800
+            config:
+              severity: error
+              tags: ["p1", "volume_monitoring"]
+              meta:
+                rationale: >
+                  Minimum 800 rows. raw_rankings has ~1040 rows; after
+                  dedup and invalid firm_ref filtering, stg__rankings
+                  yields ~1020 rows, which int__rankings preserves.
+                  A drop below 800 suggests catastrophic data loss
+                  (e.g. missing edition or country), which would make
+                  the "Top Tier Firms" widget show incomplete counts.
