@@ -1,3 +1,5 @@
+-- Grain: one row per ranking_id.
+
 WITH rankings AS (
     SELECT * FROM {{ ref('stg__rankings') }}
 ),
