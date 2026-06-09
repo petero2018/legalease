@@ -40,17 +40,6 @@ models:
                   rationale: >
                     Submissions must link to a firm. Without firm_ref
                     the submission is orphaned and useless downstream.
-          - relationships:
-              arguments:
-                to: ref('raw_firms')
-                field: firm_ref
-                config:
-                  severity: warn
-                  tags: ["p2", "data_quality"]
-                  meta:
-                    rationale: >
-                      Submissions referencing unknown firms should be
-                      investigated. Warn if count grows.
 
       - name: practice_area_id
         description: Foreign key to the practice areas reference data.

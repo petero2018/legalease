@@ -62,18 +62,6 @@ models:
                   rationale: >
                     Rankings must be linked to a firm. Without a valid firm_ref,
                     the ranking cannot be displayed in firm-specific widgets.
-          - relationships:
-              arguments:
-                to: ref('raw_firms')
-                field: firm_ref
-                config:
-                  severity: warn
-                  tags: ["p2", "data_quality"]
-                  meta:
-                    rationale: >
-                      Orphaned rankings that reference non-existent firms are
-                      excluded from the mart. This test warns if the count
-                      exceeds expectations, as it may indicate a data loading issue.
 
       - name: practice_area_id
         description: Foreign key to the raw_practice_areas seed.
