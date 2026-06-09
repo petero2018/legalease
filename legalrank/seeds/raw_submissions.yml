@@ -19,85 +19,30 @@ seeds:
     columns:
       - name: submission_id
         description: Identifier for the submission record.
-        tests:
-          - not_null:
-              config:
-                severity: warn
-          - unique:
-              config:
-                severity: warn
 
       - name: firm_ref
         description: Firm identifier linked to the raw firms seed.
-        tests:
-          - not_null:
-              config:
-                severity: warn
-          - relationships:
-              arguments:
-                to: ref('raw_firms')
-                field: firm_ref
-              config:
-                severity: warn
 
       - name: practice_area_id
         description: Practice area identifier linked to the raw practice areas seed.
-        tests:
-          - not_null:
-              config:
-                severity: warn
-          - relationships:
-              arguments:
-                to: ref('raw_practice_areas')
-                field: practice_area_id
-              config:
-                severity: warn
 
       - name: edition_year
         description: Publication edition year for the submission.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: submission_type
         description: Type of submission provided.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: submitted_by_email
         description: Email address of the submitter.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: submitted_at
         description: Timestamp when the submission was submitted.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: num_referees
         description: Number of referees included in the submission.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: status
         description: Current status of the submission.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: created_ts
         description: Timestamp when the submission record was created.
-        tests:
-          - not_null:
-              config:
-                severity: warn

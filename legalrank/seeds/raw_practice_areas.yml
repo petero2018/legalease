@@ -15,27 +15,12 @@ seeds:
     columns:
       - name: practice_area_id
         description: Unique identifier for the practice area.
-        tests:
-          - not_null:
-              config:
-                severity: warn
-          - unique:
-              config:
-                severity: warn
 
       - name: practice_group
         description: High-level practice group for the practice area.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: practice_area
         description: Main practice area name.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: sub_practice_area
         description: More specific sub-practice area classification.

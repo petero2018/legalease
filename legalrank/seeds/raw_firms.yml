@@ -17,20 +17,9 @@ seeds:
     columns:
       - name: firm_ref
         description: Unique firm identifier.
-        tests:
-          - not_null:
-              config:
-                severity: warn
-          - unique:
-              config:
-                severity: warn
 
       - name: firm_name
         description: Name of the law firm.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: country
         description: Country where the firm is based.

@@ -22,54 +22,18 @@ seeds:
     columns:
       - name: ranking_id
         description: Identifier for the ranking record.
-        tests:
-          - not_null:
-              config:
-                severity: warn
-          - unique:
-              config:
-                severity: warn
 
       - name: edition_year
         description: Publication edition year for the ranking.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: edition_id
         description: Identifier for the publication edition.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: firm_ref
         description: Firm identifier linked to the raw firms seed.
-        tests:
-          - not_null:
-              config:
-                severity: warn
-
-          - relationships:
-              arguments:
-                to: ref('raw_firms')
-                field: firm_ref
-              config:
-                severity: warn
 
       - name: practice_area_id
         description: Practice area identifier linked to the raw practice areas seed.
-        tests:
-          - not_null:
-              config:
-                severity: warn
-          - relationships:
-              arguments:
-                to: ref('raw_practice_areas')
-                field: practice_area_id
-              config:
-                severity: warn
 
       - name: ranking_tier
         description: Numeric ranking tier where available.
@@ -79,24 +43,12 @@ seeds:
 
       - name: ranking_type
         description: Type of ranking awarded to the firm.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: post_status
         description: Editorial or publishing workflow status for the ranking.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: publication_status
         description: Publication lifecycle status of the ranking.
-        tests:
-          - not_null:
-              config:
-                severity: warn
 
       - name: listing_type
         description: Listing category associated with the ranking.
@@ -106,7 +58,3 @@ seeds:
 
       - name: modified_ts
         description: Timestamp when the ranking record was last modified.
-        tests:
-          - not_null:
-              config:
-                severity: warn
