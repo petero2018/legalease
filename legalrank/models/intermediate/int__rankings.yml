@@ -1,0 +1,122 @@
+version: 2
+
+models:
+  - name: int__rankings
+    description: |
+      Intermediate rankings model with resolved firm and practice area
+      display names and derived ranking_decision_status.
+      Grain: one row per ranking_id (1:1 with stg__rankings).
+
+    columns:
+      - name: ranking_id
+        description: Unique identifier for the ranking record. Grain of the table.
+        data_type: varchar
+        tests:
+          - unique:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    Grain must be unique. Duplicates here would fan-out
+                    in the downstream mart.
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    ranking_id is required. Without it the row cannot be
+                    linked back to the source ranking.
+
+      - name: edition_year
+        description: Publication edition year for the ranking.
+        data_type: integer
+
+      - name: edition_id
+        description: Publication edition identifier (e.g. ED2024UK).
+        data_type: varchar
+
+      - name: firm_country
+        description: Country of the ranked firm.
+        data_type: varchar
+
+      - name: firm_city
+        description: City of the ranked firm.
+        data_type: varchar
+
+      - name: firm_ref
+        description: Firm identifier resolved from raw_firms.
+        data_type: varchar
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    firm_ref is the join key to firms. Null means the
+                    join failed, and firm_name will be missing.
+
+      - name: firm_name
+        description: Display name of the ranked firm.
+        data_type: varchar
+
+      - name: practice_area_id
+        description: Practice area identifier resolved from raw_practice_areas.
+        data_type: varchar
+
+      - name: practice_group
+        description: Practice group classification.
+        data_type: varchar
+
+      - name: practice_area_name
+        description: Practice area name.
+        data_type: varchar
+
+      - name: sub_practice_area
+        description: Sub-practice area name.
+        data_type: varchar
+
+      - name: ranking_tier
+        description: Unified ranking tier (0-5).
+        data_type: integer
+
+      - name: ranking_type
+        description: Type of ranking ('firm recommended', 'firm to watch').
+        data_type: varchar
+
+      - name: ranking_decision_status
+        description: >
+          Derived status: 'RANKED' or 'NOT RANKED'. Based on ranking_type,
+          ranking_tier, and post_status per the business logic rules.
+        data_type: varchar
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['ranked', 'not ranked']
+                config:
+                  severity: error
+                  tags: ["p1", "business_logic"]
+                  meta:
+                    rationale: >
+                      The ranking_decision_status derivation logic must
+                      only produce two values. Any other value means a
+                      bug in the CASE WHEN logic, which would break the
+                      "Top Tier Firms" widget filtering.
+
+      - name: post_status
+        description: Editorial workflow status (publish, draft, pending, trash).
+        data_type: varchar
+
+      - name: publication_status
+        description: Publication lifecycle status.
+        data_type: varchar
+
+      - name: listing_type
+        description: Listing category.
+        data_type: varchar
+
+      - name: modified_ts
+        description: Timestamp of the last modification.
+        data_type: timestamp

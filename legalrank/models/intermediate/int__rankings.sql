@@ -37,12 +37,12 @@ joined AS (
 
         -- status fields
         CASE
-            WHEN r.ranking_type = 'FIRM RECOMMENDED' AND r.ranking_tier = 0
-                THEN 'NOT RANKED'
-            WHEN r.ranking_type = 'FIRM TO WATCH' AND r.ranking_tier = 0
-                AND COALESCE(r.post_status, '') != 'PUBLISH'
-                THEN 'NOT RANKED'
-            ELSE 'RANKED'
+            WHEN r.ranking_type = 'firm recommended' AND r.ranking_tier = 0
+                THEN 'not ranked'
+            WHEN r.ranking_type = 'firm to watch' AND r.ranking_tier = 0
+                AND COALESCE(r.post_status, '') != 'publish'
+                THEN 'not ranked'
+            ELSE 'ranked'
         END AS ranking_decision_status,
 
         r.post_status,
