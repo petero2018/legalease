@@ -7,7 +7,7 @@ WITH source AS (
         TRIM(practice_area) AS practice_area,
         NULLIF(TRIM(sub_practice_area), '') AS sub_practice_area,
         UPPER(TRIM(country)) AS country,
-        is_active
+        TRY_CAST(is_active AS BOOLEAN) AS is_active
     FROM {{ ref('raw_practice_areas') }}
 
 )

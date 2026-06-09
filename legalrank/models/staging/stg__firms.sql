@@ -5,10 +5,10 @@ WITH source AS (
         TRIM(firm_name) AS firm_name,
         UPPER(TRIM(country)) AS country,
         INITCAP(TRIM(city)) AS city,
-        established_year,
-        is_active,
-        created_at,
-        updated_at
+        TRY_CAST(established_year AS INTEGER) AS established_year,
+        TRY_TO_BOOLEAN(TO_VARCHAR(is_active)) AS is_active,
+        CAST(created_at AS TIMESTAMP_NTZ) AS created_at,
+        CAST(updated_at AS TIMESTAMP_NTZ) AS updated_at
     FROM {{ ref('raw_firms') }}
 
 )

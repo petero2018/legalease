@@ -35,10 +35,10 @@ WITH source AS (
                 THEN FALSE
             ELSE TRUE
         END AS is_invalid_submitted_email, 
-        submitted_at, 
+        CAST(submitted_at AS TIMESTAMP_NTZ) AS submitted_at, 
         TRY_CAST(num_referees AS INTEGER) AS num_referees, 
         LOWER(TRIM(status)) AS status,
-        created_ts
+        CAST(created_ts AS TIMESTAMP_NTZ) AS created_ts
     FROM {{ ref('raw_submissions') }}
 ),
 

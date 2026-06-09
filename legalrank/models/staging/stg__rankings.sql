@@ -12,7 +12,7 @@ WITH source AS (
         end as firm_ref,
         practice_area_id,
         COALESCE(
-            ranking_tier,
+            TRY_CAST(ranking_tier AS INTEGER),
             TRY_CAST(REGEXP_REPLACE(tier_rank, 'TIER_', '') AS INTEGER)
         ) AS ranking_tier,
         REPLACE(REPLACE(LOWER(TRIM(ranking_type)), 'firm reccommended', 'firm_recommended'),'_', ' ') AS ranking_type,
@@ -20,7 +20,7 @@ WITH source AS (
         LOWER(TRIM(publication_status)) AS publication_status,
         LOWER(TRIM(listing_type)) AS listing_type,
         commentary,
-        modified_ts
+        CAST(modified_ts AS TIMESTAMP_NTZ) AS modified_ts
     FROM {{ ref('raw_rankings') }}
 ),
 
