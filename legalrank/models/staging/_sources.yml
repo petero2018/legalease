@@ -5,7 +5,7 @@ sources:
     description: >
       Raw source data loaded via dbt seed. Fivetran syncs at 20:00 UTC and 02:00 UTC.
       Marts must be ready by 07:00 UTC. Freshness thresholds reflect this SLA:
-      warn at 6 hours (02:00 sync + margin), error at 12 hours (missed sync window).
+      warn at 5 hours (02:00 sync + margin), error at 8 hours (missed sync window).
 
     tables:
       - name: raw_rankings
