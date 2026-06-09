@@ -1,0 +1,131 @@
+version: 2
+
+models:
+  - name: stg__submissions
+    description: |
+      Cleaned and deduplicated staging model for submissions data.
+      Handles deduplication on submission_id keeping the latest created_ts.
+      Grain: one row per submission_id.
+
+    columns:
+      - name: submission_id
+        description: Unique identifier for the submission. Grain of the table.
+        data_type: varchar
+        tests:
+          - unique:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    submission_id is the grain. Duplicates would cause
+                    double-counting in submission metrics.
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    Missing submission_id makes the row untraceable.
+
+      - name: firm_ref
+        description: Foreign key to the firms reference data.
+        data_type: varchar
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    Submissions must link to a firm. Without firm_ref
+                    the submission is orphaned and useless downstream.
+          - relationships:
+              arguments:
+                to: ref('raw_firms')
+                field: firm_ref
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Submissions referencing unknown firms should be
+                      investigated. Warn if count grows.
+
+      - name: practice_area_id
+        description: Foreign key to the practice areas reference data.
+        data_type: varchar
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                tags: ["p2", "data_quality"]
+                meta:
+                  rationale: >
+                    Missing practice area is incomplete but the row
+                    is still usable for firm-level aggregation.
+
+      - name: edition_year
+        description: Publication edition year for the submission.
+        data_type: integer
+
+      - name: submission_type
+        description: Type of submission (FIRM or INDIVIDUAL).
+        data_type: varchar
+
+      - name: submitted_by_email
+        description: Email of the person who made the submission.
+        data_type: varchar
+
+      - name: is_invalid_submitted_email
+        description: Flag indicating if the submitter email is invalid.
+        data_type: boolean
+
+      - name: submitted_at
+        description: Timestamp when the submission was made.
+        data_type: timestamp
+
+      - name: num_referees
+        description: Number of referees listed for the submission.
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 15
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Referee count outside 1-15 range suggests a data
+                      entry error. Non-blocking but worth monitoring.
+
+      - name: status
+        description: Submission workflow status.
+        data_type: varchar
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['submitted', 'in_review', 'approved', 'rejected']
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Unknown status values could cause downstream
+                      logic to fail silently. Cannot block the pipeline
+                      as the submission is still processable.
+
+      - name: created_ts
+        description: Timestamp when the submission record was created.
+        data_type: timestamp
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    created_ts drives deduplication. Without it we
+                    cannot determine the latest submission version.

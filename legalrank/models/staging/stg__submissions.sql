@@ -10,11 +10,11 @@ WITH source AS (
         TRY_CAST(edition_year AS INTEGER) AS edition_year,
         CASE
             WHEN submission_type IS NULL THEN NULL
-            WHEN UPPER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_')) IN ('LAW_FIRM', 'FIRM')
+            WHEN LOWER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_')) IN ('LAW_FIRM', 'FIRM')
             THEN 'FIRM'
-            WHEN UPPER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_')) = 'INDIVIDUAL'
+            WHEN LOWER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_')) = 'INDIVIDUAL'
             THEN 'INDIVIDUAL'
-            ELSE UPPER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_'))
+            ELSE LOWER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_'))
         END AS submission_type,
         CASE
             WHEN submitted_by_email IS NULL THEN NULL
@@ -37,7 +37,7 @@ WITH source AS (
         END AS is_invalid_submitted_email, 
         submitted_at, 
         TRY_CAST(num_referees AS INTEGER) AS num_referees, 
-        UPPER(TRIM(status)) AS status,
+        LOWER(TRIM(status)) AS status,
         created_ts
     FROM {{ ref('raw_submissions') }}
 ),
