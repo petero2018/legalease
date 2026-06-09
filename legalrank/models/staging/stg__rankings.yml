@@ -5,9 +5,12 @@ models:
     description: |
       Cleaned and deduplicated staging model for rankings data.
       Handles dual-schema ingestion (pre/post CMS migration) by
-      unifying ranking_tier from two source columns. Rows with invalid
-      firm_ref (NULL or empty) are excluded. post_status is standardised
-      to lowercase. Deduplication keeps the latest modified_ts per ranking_id.
+      unifying ranking_tier from two source columns. 
+      Rows with invalid firm_ref are excluded. Invalid means NULL,
+      empty/whitespace, or not matching the canonical firm identifier
+      format `F` followed by four digits (for example, `F0001`).
+      post_status is standardised to lowercase. Deduplication keeps the latest
+      modified_ts per ranking_id.
 
     columns:
       - name: ranking_id

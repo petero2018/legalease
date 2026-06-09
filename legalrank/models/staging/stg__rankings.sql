@@ -3,6 +3,8 @@ WITH source AS (
         ranking_id,
         TRY_CAST(edition_year AS INTEGER) AS edition_year,
         edition_id,
+         -- Invalid firm_ref values are nulled here, then filtered out below.
+        -- Valid firm_ref format is F followed by four digits, e.g. F0001.
         CASE
             WHEN firm_ref IS NULL THEN NULL
             WHEN regexp_like(trim(firm_ref), '^F[0-9]{4}$') THEN trim(firm_ref)
@@ -26,6 +28,7 @@ deduped AS (
     SELECT 
         *
     FROM source
+     -- Drop invalid firm_ref rows after canonicalising malformed values to NULL.
     WHERE firm_ref IS NOT NULL
     QUALIFY ROW_NUMBER() OVER (
                                 PARTITION BY ranking_id
