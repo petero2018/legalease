@@ -16,7 +16,7 @@ elementary:
   outputs:
     prod:
       type: snowflake
-      host: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
       user: "{{ env_var('SNOWFLAKE_USER') }}"
       password: "{{ env_var('SNOWFLAKE_PASSWORD') }}" # it could be a key pair in real system and a service user in snowflake
       role: SYSADMIN # of course this would be different in real system with a proper RBAC setup
