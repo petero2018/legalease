@@ -8,8 +8,8 @@ models:
       Grain: one row per ranking_id (1:1 with int__rankings).
 
     columns:
-      - name: ranking_id
-        description: Unique identifier for the ranking record. Grain of the table.
+      - name: ranking_pk
+        description: Surrogate key generated from ranking_id via dbt_utils.generate_surrogate_key.
         data_type: varchar
         tests:
           - unique:
@@ -18,16 +18,21 @@ models:
                 tags: ["p1", "data_integrity"]
                 meta:
                   rationale: >
-                    Duplicate ranking_ids would cause double-counting
-                    in the "Top Tier Firms" widget.
+                    Surrogate key must be unique as it serves as the
+                    primary key of the fact table. Duplicates would
+                    cause double-counting in the widget.
           - not_null:
               config:
                 severity: error
                 tags: ["p1", "data_integrity"]
                 meta:
                   rationale: >
-                    Without ranking_id the row cannot be linked back
-                    to the source ranking.
+                    Every row must have a surrogate key. NULL indicates
+                    a bug in the key generation logic.
+
+      - name: ranking_id
+        description: Unique identifier for the ranking record. Grain of the table.
+        data_type: varchar
 
       - name: edition_year
         description: Publication edition year.
@@ -94,20 +99,72 @@ models:
         data_type: varchar
 
       - name: is_top_tier
-        description: TRUE if ranking_tier BETWEEN 1 AND 5.
+        description: TRUE if ranking_tier BETWEEN 1 AND 5. Widget filter for tiered firms.
         data_type: boolean
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "business_logic"]
+                meta:
+                  rationale: >
+                    The CASE WHEN logic always returns TRUE or FALSE.
+                    NULL would mean the flag derivation failed, which
+                    would break the widget tier filtering.
 
       - name: is_ranked
-        description: TRUE if ranking_decision_status = 'ranked'.
+        description: TRUE if ranking_decision_status = 'ranked'. Widget filter for ranked entries.
         data_type: boolean
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "business_logic"]
+                meta:
+                  rationale: >
+                    Every row must have a definitive ranked status.
+                    NULL would cause the widget to exclude the row
+                    incorrectly, showing incomplete counts.
 
       - name: is_premium_listing
-        description: TRUE if listing_type IN ('premium', 'vip').
+        description: TRUE if listing_type IN ('premium', 'vip'). Elevated widget visibility.
         data_type: boolean
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "business_logic"]
+                meta:
+                  rationale: >
+                    Every row must have a definitive premium listing
+                    status. NULL would cause the widget to mis-render
+                    listing badges.
 
       - name: tier_group
-        description: Categorised tier group (top, mid, lower, unknown).
+        description: Categorised tier group (top, mid, lower, unknown). Widget filter control.
         data_type: varchar
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "business_logic"]
+                meta:
+                  rationale: >
+                    The CASE WHEN covers all possible ranking_tier
+                    values, so every row must be assigned a group.
+                    NULL indicates a logic bug.
+          - accepted_values:
+              arguments:
+                values: ['top', 'mid', 'lower', 'unknown']
+                config:
+                  severity: error
+                  tags: ["p1", "business_logic"]
+                  meta:
+                    rationale: >
+                      The tier_group CASE WHEN must only produce these
+                      four values. Any other value means the tier
+                      grouping logic has a bug, which would break
+                      widget filter controls.
 
       - name: modified_ts
         description: Timestamp of the last modification.
