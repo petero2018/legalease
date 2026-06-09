@@ -49,6 +49,17 @@ models:
       - name: edition_id
         description: Identifier for the publication edition (e.g. ED2024UK).
         data_type: varchar
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                tags: ["p2", "data_quality"]
+                meta:
+                  rationale: >
+                    edition_id does not join to any reference table, but
+                    a missing value means the ranking cannot be grouped
+                    or filtered by specific edition. Warning as it is
+                    useful metadata but not business-critical.
 
       - name: firm_ref
         description: Foreign key to the raw_firms seed. Must resolve to a valid firm.
@@ -62,6 +73,16 @@ models:
                   rationale: >
                     Rankings must be linked to a firm. Without a valid firm_ref,
                     the ranking cannot be displayed in firm-specific widgets.
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: '^F[0-9]{4}$'
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Verifies the SQL firm_ref validation logic. All valid
+                      firm_ref values must match the pattern F + 4 digits.
 
       - name: practice_area_id
         description: Foreign key to the raw_practice_areas seed.
@@ -109,6 +130,15 @@ models:
                       ranking_tier must be 0-5 inclusive. Any value outside
                       this range would break the "Top Tier Firms" widget
                       tiering logic and cause display errors.
+          - not_null:
+              config:
+                severity: warn
+                tags: ["p2", "data_quality"]
+                meta:
+                  rationale: >
+                    NULL ranking_tier values are legitimate (e.g. rankings
+                    still being evaluated), but monitoring NULL counts helps
+                    detect when the tier derivation logic fails.
 
       - name: ranking_type
         description: Type of ranking awarded to the firm (e.g. 'firm recommended', 'firm to watch').
@@ -125,6 +155,15 @@ models:
                       Unexpected ranking_type values indicate schema drift
                       on the source system. These would not break the mart
                       but would fail to render correctly on client dashboards.
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    ranking_type drives the ranking_decision_status derivation
+                    logic. NULL values would silently produce incorrect
+                    status in the downstream business logic.
 
       - name: post_status
         description: Editorial workflow status, standardised to lowercase.
@@ -154,10 +193,43 @@ models:
       - name: publication_status
         description: Publication lifecycle status of the ranking (e.g. Researching, Active, Archive).
         data_type: varchar
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                tags: ["p2", "data_quality"]
+                meta:
+                  rationale: >
+                    publication_status is metadata; missing values do not
+                    block downstream processing but reduce visibility into
+                    the ranking lifecycle.
+          - accepted_values:
+              arguments:
+                values: ['researching', 'active', 'archive']
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Unexpected publication_status values indicate schema
+                      drift. Non-blocking but worth monitoring for data
+                      quality assessment.
 
       - name: listing_type
-        description: Listing category (e.g. premium, standard, sponsored, vip).
+        description: Listing category (e.g. premium, standard, sponsored, vip, exclusive, featured).
         data_type: varchar
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['premium', 'standard', 'sponsored', 'vip', 'exclusive', 'featured']
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Unexpected listing_type values could affect premium
+                      listing flag logic in downstream marts. Non-blocking
+                      warning for data quality monitoring.
 
       - name: commentary
         description: Optional editorial commentary text for the ranking.

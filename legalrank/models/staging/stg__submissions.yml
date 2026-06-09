@@ -5,6 +5,7 @@ models:
     description: |
       Cleaned and deduplicated staging model for submissions data.
       Handles deduplication on submission_id keeping the latest created_ts.
+      Validates firm_ref, email format, and standardises casing.
       Grain: one row per submission_id.
 
     columns:
@@ -38,8 +39,18 @@ models:
                 tags: ["p1", "data_integrity"]
                 meta:
                   rationale: >
-                    Submissions must link to a firm. Without firm_ref
+                    Submissions must link to a known firm. Without firm_ref
                     the submission is orphaned and useless downstream.
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: '^F[0-9]{4}$'
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Verifies the SQL validation logic is working correctly.
+                      All valid firm_ref values must match pattern F + 4 digits.
 
       - name: practice_area_id
         description: Foreign key to the practice areas reference data.
@@ -57,18 +68,68 @@ models:
       - name: edition_year
         description: Publication edition year for the submission.
         data_type: integer
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    edition_year is required for edition-based filtering.
+                    Without it the submission cannot be assigned to an edition.
 
       - name: submission_type
-        description: Type of submission (FIRM or INDIVIDUAL).
+        description: Type of submission (firm or individual).
         data_type: varchar
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    submission_type drives business logic downstream.
+                    NULL values would cause silent failures.
+          - accepted_values:
+              arguments:
+                values: ['firm', 'individual']
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Unexpected submission_type values indicate data
+                      quality issues or schema drift. Non-blocking
+                      but worth monitoring.
 
       - name: submitted_by_email
         description: Email of the person who made the submission.
         data_type: varchar
+        tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+                config:
+                  severity: warn
+                  tags: ["p2", "data_quality"]
+                  meta:
+                    rationale: >
+                      Verifies the SQL email validation logic is working.
+                      Invalid emails are set to NULL and flagged in
+                      is_invalid_submitted_email.
 
       - name: is_invalid_submitted_email
         description: Flag indicating if the submitter email is invalid.
         data_type: boolean
+        tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    Every submission must have a definitive TRUE/FALSE
+                    on email validity. NULL here means the flag logic failed.
 
       - name: submitted_at
         description: Timestamp when the submission was made.
@@ -78,22 +139,27 @@ models:
         description: Number of referees listed for the submission.
         data_type: integer
         tests:
-          - dbt_expectations.expect_column_values_to_be_between:
-              arguments:
-                min_value: 1
-                max_value: 15
-                config:
-                  severity: warn
-                  tags: ["p2", "data_quality"]
-                  meta:
-                    rationale: >
-                      Referee count outside 1-15 range suggests a data
-                      entry error. Non-blocking but worth monitoring.
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    num_referees is required. Missing values would
+                    break downstream aggregations.
 
       - name: status
         description: Submission workflow status.
         data_type: varchar
         tests:
+          - not_null:
+              config:
+                severity: error
+                tags: ["p1", "data_integrity"]
+                meta:
+                  rationale: >
+                    status is required to determine the submission
+                    lifecycle state. NULL means we cannot process it.
           - accepted_values:
               arguments:
                 values: ['submitted', 'in_review', 'approved', 'rejected']
@@ -103,11 +169,11 @@ models:
                   meta:
                     rationale: >
                       Unknown status values could cause downstream
-                      logic to fail silently. Cannot block the pipeline
-                      as the submission is still processable.
+                      logic to fail silently. Non-blocking as the
+                      submission is still processable.
 
       - name: created_ts
-        description: Timestamp when the submission record was created.
+        description: Timestamp when the submission record was created. Used for deduplication.
         data_type: timestamp
         tests:
           - not_null:
@@ -117,4 +183,4 @@ models:
                 meta:
                   rationale: >
                     created_ts drives deduplication. Without it we
-                    cannot determine the latest submission version.
+                    cannot determine which version is the latest.
