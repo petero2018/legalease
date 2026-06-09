@@ -10,10 +10,10 @@ WITH source AS (
         TRY_CAST(edition_year AS INTEGER) AS edition_year,
         CASE
             WHEN submission_type IS NULL THEN NULL
-            WHEN LOWER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_')) IN ('LAW_FIRM', 'FIRM')
-            THEN 'FIRM'
-            WHEN LOWER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_')) = 'INDIVIDUAL'
-            THEN 'INDIVIDUAL'
+            WHEN LOWER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_')) IN ('law_firm', 'firm')
+            THEN 'firm'
+            WHEN LOWER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_')) = 'individual'
+            THEN 'individual'
             ELSE LOWER(REGEXP_REPLACE(TRIM(submission_type), '[^A-Za-z0-9]+', '_'))
         END AS submission_type,
         CASE
