@@ -1,4 +1,4 @@
-WITH source AS (
+WITH rankings AS (
     SELECT * FROM {{ ref('stg__rankings') }}
 ),
 
@@ -51,7 +51,7 @@ joined AS (
 
         -- timestamps
         r.modified_ts
-    FROM source r
+    FROM rankings r
     LEFT JOIN firms f
         ON r.firm_ref = f.firm_ref
     LEFT JOIN practice_areas pa

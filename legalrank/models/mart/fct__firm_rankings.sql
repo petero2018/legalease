@@ -1,9 +1,11 @@
-WITH source AS (
+WITH rankings AS (
     SELECT * FROM {{ ref('int__rankings') }}
 ),
 
 with_flags AS (
     SELECT
+        -- As a palceholder should a composit key needed
+        {{ dbt_utils.generate_surrogate_key(['ranking_id']) }} AS ranking_pk, 
         *,
 
         -- Top Tier Firms widget: only tiered firms qualify
@@ -22,7 +24,7 @@ with_flags AS (
             WHEN ranking_tier = 5 THEN 'lower'
             ELSE 'unknown'
         END AS tier_group
-    FROM source
+    FROM rankings
 )
 
 SELECT * FROM with_flags
