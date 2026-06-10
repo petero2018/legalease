@@ -161,7 +161,7 @@ Elementary is installed both as a dbt package and as a Python dependency. The db
 - Use `_fivetran_synced` or another ingestion timestamp for freshness once available.
 - Add CI commands that run `dbt parse`, `dbt build`, and `edr monitor` from the Docker image.
 
-### Production Environment and CI/CD
+#### Production Environment and CI/CD
 
 This assessment uses a single dbt target for simplicity. In production I would separate development and production environments properly:
 
