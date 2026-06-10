@@ -3,9 +3,8 @@ DOCKERFILE ?= ./Dockerfile
 DBT_TARGET ?= prod
 
 ENV_FILE ?= $(CURDIR)/.env
-DATA_DIR ?= $(CURDIR)/data
 
-DOCKER_RUN ?= docker run --rm --env-file $(ENV_FILE) -v "$(DATA_DIR):/app/data" $(DOCKER_IMAGE)
+DOCKER_RUN ?= docker run --rm --env-file $(ENV_FILE) $(DOCKER_IMAGE)
 
 DBT_DIR ?= /app/legalrank
 POETRY ?= /root/.local/bin/poetry
@@ -16,7 +15,7 @@ docker-build:
 	docker build -f $(DOCKERFILE) -t $(DOCKER_IMAGE) .
 
 docker-shell:
-	docker run --rm --env-file $(ENV_FILE) -it -v "$(DATA_DIR):/app/data" $(DOCKER_IMAGE) bash
+	docker run --rm --env-file $(ENV_FILE) -it $(DOCKER_IMAGE) bash
 
 docker-env:
 	$(DOCKER_RUN) printenv | sort
