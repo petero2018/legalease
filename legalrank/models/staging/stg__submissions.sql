@@ -1,6 +1,8 @@
 WITH source AS (
     SELECT 
         submission_id, 
+        -- Invalid firm_ref values are nulled here, then filtered out below.
+        -- Valid firm_ref format is F followed by four digits, e.g. F0001.
         CASE
             WHEN firm_ref IS NULL THEN NULL
             WHEN REGEXP_LIKE(TRIM(firm_ref), '^F[0-9]{4}$') THEN TRIM(firm_ref)

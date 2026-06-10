@@ -3,7 +3,7 @@ WITH source AS (
         ranking_id,
         TRY_CAST(edition_year AS INTEGER) AS edition_year,
         edition_id,
-         -- Invalid firm_ref values are nulled here, then filtered out below.
+        -- Invalid firm_ref values are nulled here, then filtered out below.
         -- Valid firm_ref format is F followed by four digits, e.g. F0001.
         CASE
             WHEN firm_ref IS NULL THEN NULL

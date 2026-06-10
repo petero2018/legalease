@@ -6,6 +6,9 @@ models:
       Cleaned and deduplicated staging model for submissions data.
       Handles deduplication on submission_id keeping the latest created_ts.
       Validates firm_ref, email format, and standardises casing.
+      Rows with invalid firm_ref are excluded because submissions without a valid
+      firm link are orphaned. Invalid means NULL, empty/whitespace, or not matching
+      the canonical firm identifier format `F` followed by four digits (for example, `F0001`).
       Grain: one row per submission_id.
 
     columns:
