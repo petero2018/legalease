@@ -6,12 +6,12 @@ WITH rankings AS (
 
 firms AS (
     SELECT firm_ref, firm_name, country, city
-    FROM {{ ref('raw_firms') }}
+    FROM {{ ref('stg__firms') }}
 ),
 
 practice_areas AS (
     SELECT practice_area_id, practice_group, practice_area, sub_practice_area
-    FROM {{ ref('raw_practice_areas') }}
+    FROM {{ ref('stg__practice_areas') }}
 ),
 
 joined AS (
@@ -53,6 +53,10 @@ joined AS (
 
         -- timestamps
         r.modified_ts
+
+        -- Keep the rankings grain authoritative. Reference joins are left joins so
+        -- missing firm/practice lookup rows do not silently drop ranking records.
+        -- Missing display attributes are monitored separately.
     FROM rankings r
     LEFT JOIN firms f
         ON r.firm_ref = f.firm_ref
