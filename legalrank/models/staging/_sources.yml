@@ -11,7 +11,7 @@ sources:
       - name: raw_rankings
         description: Raw rankings data from CMS export
         config:
-          loaded_at_field: modified_ts
+          loaded_at_field: modified_ts # in ideal prod setup this would be _fivetran_synced or alternative ingestion timestamp
           freshness:
             warn_after:
               count: 5
